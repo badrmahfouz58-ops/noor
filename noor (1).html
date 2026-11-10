@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>نور</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Aref+Ruqaa:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+:root{
+  --glass:rgba(255,255,255,.10);
+  --glass-b:rgba(255,255,255,.22);
+  --soft:#f3d6e0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Cairo',sans-serif;
+  color:#fbeff4;
+  min-height:100vh;
+  overflow-x:hidden;
+  background:#3a2236;
+}
+
+/* ===== خلفية هادية ===== */
+.bg-gradient{
+  position:fixed;inset:0;z-index:-3;
+  background:linear-gradient(135deg,#b9788f,#8b5a7c,#5b4a78,#a36883);
+  background-size:300% 300%;
+  animation:bgMove 40s ease infinite;
+}
+@keyframes bgMove{0%{background-position:0 50%}50%{background-position:100% 50%}100%{background-position:0 50%}}
+.stars{position:fixed;inset:0;z-index:-2;pointer-events:none}
+.star{
+  position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;
+  animation:twinkle 6s infinite ease-in-out;opacity:.15;
+}
+@keyframes twinkle{0%,100%{opacity:.1}50%{opacity:.55}}
+
+/* ===== الصفحة ===== */
+.page{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 8px 40px;gap:14px}
+.title{
+  font-family:'Aref Ruqaa',serif;font-weight:400;
+  font-size:clamp(26px,5.5vw,40px);color:var(--soft);text-align:center;
+  opacity:0;animation:fade 2s ease .2s forwards;
+}
+@keyframes fade{to{opacity:1}}
+
+/* ===== القلب ===== */
+.stage{position:relative;margin:6px auto 0;animation:breathe 8s ease-in-out infinite}
+.stage::before{
+  content:"";position:absolute;inset:6% 4% 2% 4%;z-index:-1;border-radius:50%;
+  background:radial-gradient(circle,rgba(232,165,188,.22),rgba(232,165,188,0) 68%);
+}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.018)}}
+
+.w{
+  position:absolute;white-space:nowrap;text-align:center;font-weight:600;
+  color:var(--c);opacity:0;cursor:default;
+  animation:wIn 1.8s ease forwards;
+  transition:color .35s, text-shadow .35s, scale .35s, opacity .35s;
+}
+@keyframes wIn{from{opacity:0;transform:translateY(8px)}to{opacity:var(--o);transform:none}}
+.w.done{animation:none;opacity:var(--o)}
+.w.done:hover,.w.done.on{opacity:1;color:#fff;text-shadow:0 0 12px rgba(255,255,255,.55);scale:1.18;z-index:5}
+
+.name{
+  position:absolute;left:50%;top:40%;transform:translate(-50%,-50%);
+  font-family:'Aref Ruqaa',serif;font-weight:700;color:#fff;line-height:1;
+  text-shadow:0 0 26px rgba(255,255,255,.45),0 0 60px rgba(232,165,188,.55);
+  opacity:0;animation:fade 2.4s ease .3s forwards;pointer-events:none;
+}
+
+/* ===== الكابشن ===== */
+.caption{
+  min-height:44px;text-align:center;font-size:17px;color:var(--soft);
+  display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;
+  opacity:0;animation:fade 2s ease 3.2s forwards;
+}
+.caption .cn{opacity:.85}
+.caption .cp{font-weight:700;color:#fff;font-size:20px}
+
+/* ===== قائمة اللغات ===== */
+details{
+  width:min(720px,94vw);margin-top:6px;
+  background:var(--glass);border:1px solid var(--glass-b);border-radius:20px;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  opacity:0;animation:fade 2s ease 3.6s forwards;
+}
+summary{cursor:pointer;padding:14px 20px;font-weight:600;text-align:center;list-style:none;color:var(--soft)}
+summary::-webkit-details-marker{display:none}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 16px;padding:6px 20px 20px}
+.list div{display:flex;justify-content:space-between;gap:10px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.1);padding:4px 0}
+.list span:first-child{opacity:.75}
+.list span:last-child{font-weight:600;color:#fff}
+  </style>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <div class="stars" id="stars"></div>
+
+  <main class="page">
+    <h1 class="title">بحبك بكل لغات العالم</h1>
+    <div class="stage" id="stage">
+      <div class="name" id="name">نور</div>
+    </div>
+    <div class="caption" id="caption"></div>
+    <details>
+      <summary>كل اللغات في قائمة</summary>
+      <div class="list" id="list"></div>
+    </details>
+  </main>
+
+  <script>
+/* [الجملة, اسم اللغة] */
+const DATA = [
+  ["أحبك","العربية الفصحى"],
+  ["بحبك","العربية (المصرية)"],
+  ["كنحبك","العربية (المغربية)"],
+  ["نحبك","العربية (التونسية والجزائرية)"],
+  ["I love you","الإنجليزية"],
+  ["Je t'aime","الفرنسية"],
+  ["Te amo","الإسبانية"],
+  ["Eu te amo","البرتغالية"],
+  ["Ti amo","الإيطالية"],
+  ["Ich liebe dich","الألمانية"],
+  ["Ik hou van je","الهولندية"],
+  ["Я тебя люблю","الروسية"],
+  ["Я тебе кохаю","الأوكرانية"],
+  ["Kocham cię","البولندية"],
+  ["Miluji tě","التشيكية"],
+  ["Ľúbim ťa","السلوفاكية"],
+  ["Szeretlek","المجرية"],
+  ["Te iubesc","الرومانية"],
+  ["Обичам те","البلغارية"],
+  ["Volim te","الصربية والكرواتية"],
+  ["Ljubim te","السلوفينية"],
+  ["Σ' αγαπώ","اليونانية"],
+  ["Seni seviyorum","التركية"],
+  ["دوستت دارم","الفارسية"],
+  ["אני אוהב אותך","العبرية"],
+  ["مجھے تم سے محبت ہے","الأردية"],
+  ["मैं तुमसे प्यार करता हूँ","الهندية"],
+  ["আমি তোমাকে ভালোবাসি","البنغالية"],
+  ["ਮੈਂ ਤੈਨੂੰ ਪਿਆਰ ਕਰਦਾ ਹਾਂ","البنجابية"],
+  ["હું તને પ્રેમ કરું છું","الغوجاراتية"],
+  ["मी तुझ्यावर प्रेम करतो","الماراثية"],
+  ["நான் உன்னை காதலிக்கிறேன்","التاميلية"],
+  ["నేను నిన్ను ప్రేమిస్తున్నాను","التيلوغوية"],
+  ["ನಾನು ನಿನ್ನನ್ನು ಪ್ರೀತಿಸುತ್ತೇನೆ","الكانادية"],
+  ["ഞാൻ നിന്നെ സ്നേഹിക്കുന്നു","الملايالامية"],
+  ["මම ඔබට ආදරෙයි","السنهالية"],
+  ["म तिमीलाई माया गर्छु","النيبالية"],
+  ["愛してる","اليابانية"],
+  ["我爱你","الصينية (الماندرين)"],
+  ["我愛你","الصينية (الكانتونية)"],
+  ["사랑해","الكورية"],
+  ["ฉันรักเธอ","التايلاندية"],
+  ["Anh yêu em","الفيتنامية"],
+  ["Aku cinta kamu","الإندونيسية"],
+  ["Saya cintakan awak","الماليزية"],
+  ["Mahal kita","التاغالوغية (الفلبين)"],
+  ["ខ្ញុំស្រលាញ់អ្នក","الخميرية"],
+  ["ຂ້ອຍຮັກເຈົ້າ","اللاوية"],
+  ["Би чамд хайртай","المنغولية"],
+  ["Мен сені жақсы көремін","الكازاخية"],
+  ["Seni sevaman","الأوزبكية"],
+  ["Səni sevirəm","الأذربيجانية"],
+  ["მე შენ მიყვარხარ","الجورجية"],
+  ["Ես քեզ սիրում եմ","الأرمنية"],
+  ["Nakupenda","السواحيلية"],
+  ["Ngiyakuthanda","الزولو"],
+  ["Ndiyakuthanda","الخوسا"],
+  ["Ek is lief vir jou","الأفريقانية"],
+  ["እወድሻለሁ","الأمهرية"],
+  ["Ina son ki","الهوسا"],
+  ["Mo nifẹ rẹ","اليوروبا"],
+  ["Ahụrụ m gị n'anya","الإيغبو"],
+  ["Waan ku jeclahay","الصومالية"],
+  ["Tiako ianao","الملغاشية"],
+  ["Minä rakastan sinua","الفنلندية"],
+  ["Jag älskar dig","السويدية"],
+  ["Jeg elsker deg","النرويجية"],
+  ["Jeg elsker dig","الدنماركية"],
+  ["Ég elska þig","الآيسلندية"],
+  ["Ma armastan sind","الإستونية"],
+  ["Es tevi mīlu","اللاتفية"],
+  ["Aš tave myliu","الليتوانية"],
+  ["Tá grá agam duit","الأيرلندية"],
+  ["Rwy'n dy garu di","الويلزية"],
+  ["Tha gaol agam ort","الغيلية الاسكتلندية"],
+  ["Karout a ran ac'hanout","البريتونية"],
+  ["Maite zaitut","الباسكية"],
+  ["T'estimo","الكاتالونية"],
+  ["Quérote","الجاليكية"],
+  ["Inħobbok","المالطية"],
+  ["Të dua","الألبانية"],
+  ["Те сакам","المقدونية"],
+  ["Amo te","اللاتينية"],
+  ["Mi amas vin","الإسبرانتو"],
+  ["Aloha au iā ʻoe","الهاوائية"],
+  ["Aroha ahau ki a koe","الماورية"],
+  ["Ou te alofa ia te oe","الساموانية"],
+  ["ʻOku ou ʻofa ʻiate koe","التونغية"],
+  ["Au domoni iko","الفيجية"],
+  ["Ua here vau ia oe","التاهيتية"],
+  ["Mwen renmen ou","الكريولية الهايتية"],
+  ["איך האב דיך ליב","اليديشية"],
+  ["Ech hunn dech gär","اللوكسمبورغية"],
+  ["अहं त्वां प्रेम करोमि","السنسكريتية"],
+  ["Ez te hez dikim","الكردية"],
+  ["زه تا سره مینه لرم","الباشتو"],
+  ["مان توکي پيار ڪيان ٿو","السندية"],
+  ["مەن سېنى ياخشى كۆرىمەن","الأويغورية"],
+  ["Мен сени сүйөм","القيرغيزية"],
+  ["Ман туро дӯст медорам","الطاجيكية"],
+  ["Men seni söýýärin","التركمانية"],
+  ["Мин сине яратам","التترية"],
+  ["Ndimakukonda","التشيتشيوا"],
+  ["Ndinokuda","الشونا"],
+  ["Ndagukunda","الكينيارواندية"],
+  ["Nalingi yo","اللينغالا"],
+  ["Dama la bëgg","الولوف"],
+  ["Me dɔ wo","التوي"],
+  ["Aku tresna karo kowe","الجاوية"],
+  ["Abdi bogoh ka anjeun","السوندانية"],
+  ["Gihigugma tika","السيبوانو"],
+  ["Ik hâld fan dy","الفريزية"],
+  ["T'aimi","الأوكسيتانية"],
+  ["Munayki","الكيتشوا"],
+  ["Rohayhu","الغواراني"],
+  ["Nimitztlazohtla","الناواتل"]
+];
+
+const $ = (s) => document.querySelector(s);
+const rand = (a, b) => Math.random() * (b - a) + a;
+const COLORS = ["#fbeff4","#f3d6e0","#ffd9e6","#e8a5bc","#ffffff"];
+
+/* نجوم */
+(function(){
+  const box = $("#stars");
+  for(let i=0;i<50;i++){
+    const s = document.createElement("div");
+    s.className = "star";
+    s.style.left = rand(0,100)+"%";
+    s.style.top = rand(0,100)+"%";
+    s.style.animationDelay = rand(0,6)+"s";
+    s.style.animationDuration = rand(5,9)+"s";
+    box.appendChild(s);
+  }
+})();
+
+/* قائمة اللغات */
+(function(){
+  const list = $("#list");
+  DATA.forEach(([p, n]) => {
+    const row = document.createElement("div");
+    const a = document.createElement("span"); a.textContent = n;
+    const b = document.createElement("span"); b.textContent = p; b.dir = "auto";
+    row.appendChild(a); row.appendChild(b);
+    list.appendChild(row);
+  });
+})();
+
+const stage = $("#stage"), nameEl = $("#name"), caption = $("#caption");
+const mctx = document.createElement("canvas").getContext("2d");
+function measure(t, fs){
+  mctx.font = `600 ${fs}px Cairo, "Segoe UI", sans-serif`;
+  return mctx.measureText(t).width;
+}
+
+function showDefault(){
+  caption.textContent = `بحبك بـ ${DATA.length} لغة`;
+}
+function show(item){
+  caption.textContent = "";
+  const n = document.createElement("span"); n.className = "cn"; n.textContent = item[1];
+  const p = document.createElement("span"); p.className = "cp"; p.textContent = item[0]; p.dir = "auto";
+  caption.appendChild(n); caption.appendChild(p);
+}
+
+/* هل النقطة جوه القلب؟ */
+function inHeart(px, py, W, H){
+  const x = (px / W - 0.5) * 2.7;
+  const y = (0.5 - py / H) * 2.7 + 0.1;
+  const a = x*x + y*y - 1;
+  return a*a*a - x*x*y*y*y <= 0;
+}
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function build(){
+  stage.querySelectorAll(".w").forEach(e => e.remove());
+
+  const W = Math.round(Math.min(innerWidth - 16, 780, Math.max(300, innerHeight - 170)));
+  const H = W;
+  stage.style.width = W + "px";
+  stage.style.height = H + "px";
+  nameEl.style.fontSize = (W * 0.15) + "px";
+
+  const sc = W / 640;
+  const maxFs = Math.max(11, 18 * sc);
+  const minFs = Math.max(6.5, 7.5 * sc);
+
+  /* مكان اسم نور محجوز */
+  const nm = { x: W*0.5 - W*0.16, y: H*0.40 - W*0.11, w: W*0.32, h: W*0.22 };
+
+  const widthCache = new Map();
+  function width(text, fs){
+    const key = fs + "|" + text;
+    let w = widthCache.get(key);
+    if(w === undefined){ w = measure(text, fs) + 2; widthCache.set(key, w); }
+    return w;
+  }
+
+  /* الأجزاء الأفقية الصالحة داخل القلب في سطر معيّن */
+  function rowSegments(y, lh){
+    const segs = [];
+    let start = null;
+    const step = 2;
+    for(let x = 0; x <= W; x += step){
+      let ok = inHeart(x, y + 1, W, H) && inHeart(x, y + lh / 2, W, H) && inHeart(x, y + lh - 1, W, H);
+      if(ok && y + lh > nm.y - 2 && y < nm.y + nm.h + 2 && x > nm.x - 4 && x < nm.x + nm.w + 4) ok = false;
+      if(ok && start === null) start = x;
+      if(!ok && start !== null){ segs.push([start + 2, x - 2]); start = null; }
+    }
+    if(start !== null) segs.push([start + 2, W - 2]);
+    return segs;
+  }
+
+  function pack(fs){
+    const lh = Math.ceil(fs * 1.5);
+    const minGap = fs * 0.8;
+    let pool = shuffle(DATA.slice());
+    const placed = [], seen = new Set();
+
+    for(let y = 0; y + lh <= H; y += lh){
+      for(const [a, b] of rowSegments(y, lh)){
+        const segW = b - a;
+        if(segW < fs * 4) continue;
+        const row = [];
+        let used = 0;
+        for(;;){
+          if(pool.length < 14) pool = pool.concat(shuffle(DATA.slice()));
+          let idx = -1, w = 0;
+          for(let k = 0; k < 12; k++){
+            const ww = width(pool[k][0], fs);
+            if(used + (row.length ? minGap : 0) + ww <= segW){ idx = k; w = ww; break; }
+          }
+          if(idx < 0) break;
+          const it = pool.splice(idx, 1)[0];
+          row.push({ it, w });
+          used += (row.length > 1 ? minGap : 0) + w;
+          seen.add(it[0]);
+        }
+        if(!row.length) continue;
+        const totalW = row.reduce((s, r) => s + r.w, 0);
+        let gap = row.length > 1 ? (segW - totalW) / (row.length - 1) : 0;
+        gap = Math.min(gap, fs * 2.4);
+        const rowW = totalW + gap * (row.length - 1);
+        let x = a + (segW - rowW) / 2;
+        for(const r of row){
+          placed.push({ it: r.it, x, y, w: r.w, h: lh, fs });
+          x += r.w + gap;
+        }
+      }
+    }
+    return { placed, unique: seen.size };
+  }
+
+  /* أكبر خط بيحط كل اللغات مرة واحدة على الأقل */
+  let best = null;
+  for(let fs = maxFs; fs >= minFs - 0.01; fs -= 0.3){
+    let res = null;
+    for(let t = 0; t < 3; t++){
+      const r = pack(fs);
+      if(!res || r.unique > res.unique) res = r;
+      if(res.unique >= DATA.length) break;
+    }
+    if(!best || res.unique > best.unique) best = res;
+    if(res.unique >= DATA.length){ best = res; break; }
+  }
+
+  best.placed.forEach(p => {
+    const el = document.createElement("span");
+    el.className = "w";
+    el.textContent = p.it[0];
+    el.dir = "auto";
+    el.style.left = p.x + "px";
+    el.style.top = p.y + "px";
+    el.style.width = Math.ceil(p.w) + "px";
+    el.style.height = p.h + "px";
+    el.style.lineHeight = p.h + "px";
+    el.style.fontSize = p.fs + "px";
+    el.style.setProperty("--c", COLORS[Math.floor(Math.random() * COLORS.length)]);
+    el.style.setProperty("--o", rand(0.72, 1).toFixed(2));
+    const dx = (p.x + p.w / 2) / W - 0.5, dy = (p.y + p.h / 2) / H - 0.4;
+    const d = Math.min(1, Math.hypot(dx, dy) / 0.55);
+    el.style.animationDelay = (0.6 + d * 3 + rand(0, 0.6)) + "s";
+    el.addEventListener("animationend", () => el.classList.add("done"));
+    el.addEventListener("mouseenter", () => show(p.it));
+    el.addEventListener("mouseleave", showDefault);
+    el.addEventListener("click", () => show(p.it));
+    stage.appendChild(el);
+  });
+}
+
+showDefault();
+(document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(build);
+
+let lastW = innerWidth, t;
+addEventListener("resize", () => {
+  if(innerWidth === lastW) return;
+  lastW = innerWidth;
+  clearTimeout(t);
+  t = setTimeout(build, 250);
+});
+  </script>
+</body>
+</html>
